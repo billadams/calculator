@@ -1,0 +1,72 @@
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  /* font-family: 'Courier New', Courier, monospace;
+  font-weight: 400; */
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+.calculator {
+  width: fit-content;
+  margin: 0 auto;
+  padding: 0.5rem;
+  background-color: darkslategray;
+  color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+}
+
+button {
+  height: 2.75rem;
+  width: 2.75rem;
+  border-radius: 2.75rem;
+}
+
+.keys {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  justify-items: center;
+  gap: 0.5rem;
+}
+
+.clear {
+  grid-column: 1 / 2;
+}
+
+.divide {
+  grid-column: 4 / 5;
+  /* grid-column: span 1; */
+  /* margin-left: auto; */
+}
+
+.zero {
+  grid-column: 2 / 3;
+  /* margin-left: auto; */
+}
+
+.display,
+.expression {
+  height: 2rem;
+  margin-bottom: 0.5rem;
+  align-content: end;
+  text-align: right;
+}
+
+/* .numbers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.operators {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+} */
