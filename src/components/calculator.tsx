@@ -13,11 +13,9 @@ const Operator = {
 // Max numbers the screen can display: ?
 // Display all numbers and operators until equal sign is pressed.
 // Replace expression with result when equal sign is pressed.
-// Add a button to clear the screen.
 // Store the expression in a variable. Display the expression above the result.
 // Disply expression above the result using a smaller font.
 // Add a button to switch between dark mode and light mode.
-// Add a button to delete the last character.
 // Add a button to add a negative sign.
 // Add a button to add a percentage sign.
 // Add a button to add a square root sign.
@@ -29,13 +27,52 @@ const Operator = {
 // Add a button to add a tangent sign.
 // Add a button to add a square sign.
 // Add a button to add a cube sign.
+// Allow only a single decimal point between operators.
+// Code to calculate the result of the expression will have to follow the order of operations.
 // Web Dev Extraordinaire.
 // Number and operator keyboard presses should work with the calculator.
 export function Calculator() {
-  const [expression, setExpression] = useState<string>('0');
+  const [expression, setExpression] = useState<string>();
   const [isClear, setIsClear] = useState<boolean>(true);
   // const [result, setResult] = useState<string>('0');
   // const [operator, setOperator] = useState<string | null>(null);
+
+  // function isNumericSequence(): boolean {
+  //   //
+  // }
+
+  function isPreviousValueAnOperator(): boolean {
+    const lastChar = expression?.[expression.length - 1];
+
+    return (
+      (lastChar && lastChar === Operator.Add) ||
+      lastChar === Operator.Subtract ||
+      lastChar === Operator.Multiply ||
+      lastChar === Operator.Divide
+    );
+  }
+
+  function isSameOperator(operator: string): boolean {
+    const lastChar = expression?.[expression.length - 1];
+
+    return lastChar === operator;
+  }
+
+  function isSecondDecimal(value: string): boolean {
+    const lastChar = expression?.[expression.length - 1];
+    return lastChar === value;
+  }
+
+  function isFirstCharacter(): boolean {
+    return !expression;
+  }
+
+  function isFirstCharacterNumeric(): boolean {
+    const firstChar = expression?.[0];
+    const isNumber = !isNaN(Number(firstChar));
+
+    return isNumber;
+  }
 
   function onButtonClick(e: React.MouseEvent<HTMLButtonElement>): void {
     const value = e.currentTarget.value;
@@ -48,19 +85,68 @@ export function Calculator() {
         setExpression((prev) => prev + value);
       }
     } else {
-      if (value === Operator.Clear) {
-        setExpression('0');
-        setIsClear(true);
+      if (isFirstCharacter()) {
+        return;
       }
-      if (value === 'backspace') {
-        setExpression((prev) => {
-          if (prev.length === 1) {
-            setIsClear(true);
-            return '0';
+
+      if (!isFirstCharacterNumeric()) {
+        return;
+      }
+
+      if (isSameOperator(value) || isPreviousValueAnOperator()) {
+        return;
+      }
+
+      switch (value) {
+        case Operator.Clear:
+          setExpression(undefined);
+          setIsClear(true);
+          break;
+        case 'backspace':
+          setExpression((prev) => {
+            if (prev?.length === 1) {
+              setIsClear(true);
+              return '0';
+            }
+
+            return prev?.slice(0, -1);
+          });
+          break;
+        case Operator.Divide:
+          setExpression((prev) => prev + Operator.Divide);
+          break;
+        case Operator.Multiply:
+          setExpression((prev) => prev + Operator.Multiply);
+          break;
+        case Operator.Subtract:
+          setExpression((prev) => prev + Operator.Subtract);
+          break;
+        case Operator.Add:
+          setExpression((prev) => prev + Operator.Add);
+          break;
+        case Operator.Decimal:
+          if (isSecondDecimal(value)) {
+            return;
+          } else {
+            setExpression((prev) => prev + Operator.Decimal);
           }
-          return prev.slice(0, -1);
-        });
+          break;
+        default:
+          setExpression('ERROR');
       }
+
+      // if (value === Operator.Clear) {
+      //   setExpression('0');
+      //   setIsClear(true);
+      // }
+      // if (value === 'backspace') {
+      //   setExpression((prev) => {
+      //     if (prev.length === 1) {
+      //       setIsClear(true);
+      //       return '0';
+      //     }
+      //     return prev.slice(0, -1);
+      //   });
     }
   }
 
@@ -69,7 +155,7 @@ export function Calculator() {
       <h1>Calculator</h1>
       <div className='screen'>
         <div className='expression'>0</div>
-        <div className='display'>{expression}</div>
+        <div className='display'>{expression ?? '0'}</div>
       </div>
       <div className='keys'>
         <button
@@ -98,6 +184,9 @@ export function Calculator() {
           name='divide'
           value={Operator.Divide}
           className='divide'
+          onClick={(e) => {
+            onButtonClick(e);
+          }}
         >
           {Operator.Divide}
         </button>
@@ -131,7 +220,14 @@ export function Calculator() {
         >
           9
         </button>
-        <button type='button' name='multiply' value={Operator.Multiply}>
+        <button
+          type='button'
+          name='multiply'
+          value={Operator.Multiply}
+          onClick={(e) => {
+            onButtonClick(e);
+          }}
+        >
           {Operator.Multiply}
         </button>
         <button
@@ -164,7 +260,14 @@ export function Calculator() {
         >
           6
         </button>
-        <button type='button' name='subtract' value={Operator.Subtract}>
+        <button
+          type='button'
+          name='subtract'
+          value={Operator.Subtract}
+          onClick={(e) => {
+            onButtonClick(e);
+          }}
+        >
           {Operator.Subtract}
         </button>
         <button
@@ -197,7 +300,14 @@ export function Calculator() {
         >
           3
         </button>
-        <button type='button' name='four' value={Operator.Add}>
+        <button
+          type='button'
+          name='four'
+          value={Operator.Add}
+          onClick={(e) => {
+            onButtonClick(e);
+          }}
+        >
           {Operator.Add}
         </button>
         <button
@@ -211,10 +321,24 @@ export function Calculator() {
         >
           0
         </button>
-        <button type='button' name='decimal' value={Operator.Decimal}>
+        <button
+          type='button'
+          name='decimal'
+          value={Operator.Decimal}
+          onClick={(e) => {
+            onButtonClick(e);
+          }}
+        >
           {Operator.Decimal}
         </button>
-        <button type='button' name='equal' value={Operator.Equal}>
+        <button
+          type='button'
+          name='equal'
+          value={Operator.Equal}
+          onClick={(e) => {
+            onButtonClick(e);
+          }}
+        >
           {Operator.Equal}
         </button>
       </div>
