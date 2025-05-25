@@ -5,32 +5,26 @@ const Operator = {
   Subtract: '-',
   Multiply: '*',
   Divide: '/',
-  Equal: '=',
-  Clear: 'clear',
-  Decimal: '.',
 } as const;
 
-// Max numbers the screen can display: ?
-// Display all numbers and operators until equal sign is pressed.
-// Replace expression with result when equal sign is pressed.
-// Store the expression in a variable. Display the expression above the result.
-// Disply expression above the result using a smaller font.
-// Add a button to switch between dark mode and light mode.
-// Add a button to add a negative sign.
-// Add a button to add a percentage sign.
-// Add a button to add a square root sign.
-// Add a button to add a power sign.
-// Add a button to add a factorial sign.
-// Add a button to add a logarithm sign.
-// Add a button to add a sine sign.
-// Add a button to add a cosine sign.
-// Add a button to add a tangent sign.
-// Add a button to add a square sign.
-// Add a button to add a cube sign.
-// Allow only a single decimal point between operators.
-// Code to calculate the result of the expression will have to follow the order of operations.
-// Web Dev Extraordinaire.
-// Number and operator keyboard presses should work with the calculator.
+type Operator = (typeof Operator)[keyof typeof Operator];
+
+// type Expression = number | Operator | '.' | undefined;
+
+type Expression = {
+  isFloat: boolean;
+  isOperator: boolean;
+  isNumber: boolean;
+  value: number | Operator | '.' | undefined;
+};
+
+interface CalculatorProps {
+  clear: boolean;
+  expression: Array<Expression>;
+  expressionDisplay: string;
+  result: string;
+}
+
 export function Calculator() {
   const [expression, setExpression] = useState<string>();
   const [isClear, setIsClear] = useState<boolean>(true);
@@ -98,7 +92,7 @@ export function Calculator() {
       }
 
       switch (value) {
-        case Operator.Clear:
+        case 'clear':
           setExpression(undefined);
           setIsClear(true);
           break;
@@ -124,29 +118,16 @@ export function Calculator() {
         case Operator.Add:
           setExpression((prev) => prev + Operator.Add);
           break;
-        case Operator.Decimal:
+        case '.':
           if (isSecondDecimal(value)) {
             return;
           } else {
-            setExpression((prev) => prev + Operator.Decimal);
+            setExpression((prev) => prev + '.');
           }
           break;
         default:
-          setExpression('ERROR');
+          setExpression(`${value} not supported.`);
       }
-
-      // if (value === Operator.Clear) {
-      //   setExpression('0');
-      //   setIsClear(true);
-      // }
-      // if (value === 'backspace') {
-      //   setExpression((prev) => {
-      //     if (prev.length === 1) {
-      //       setIsClear(true);
-      //       return '0';
-      //     }
-      //     return prev.slice(0, -1);
-      //   });
     }
   }
 
@@ -324,22 +305,22 @@ export function Calculator() {
         <button
           type='button'
           name='decimal'
-          value={Operator.Decimal}
+          value={'.'}
           onClick={(e) => {
             onButtonClick(e);
           }}
         >
-          {Operator.Decimal}
+          {'.'}
         </button>
         <button
           type='button'
           name='equal'
-          value={Operator.Equal}
+          value={'equal'}
           onClick={(e) => {
             onButtonClick(e);
           }}
         >
-          {Operator.Equal}
+          {'='}
         </button>
       </div>
     </div>
