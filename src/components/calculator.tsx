@@ -9,8 +9,6 @@ const Operator = {
 
 type Operator = (typeof Operator)[keyof typeof Operator];
 
-// type Expression = number | Operator | '.' | undefined;
-
 type Expression = {
   isFloat: boolean;
   isOperator: boolean;
@@ -19,114 +17,296 @@ type Expression = {
 };
 
 interface CalculatorProps {
-  clear: boolean;
-  expression: Array<Expression>;
   expressionDisplay: string;
-  result: string;
+  isDisplayClear: boolean;
+  result?: string;
+  values: Array<Expression>;
+}
+
+function setInitialState(): CalculatorProps {
+  return {
+    expressionDisplay: '',
+    isDisplayClear: true,
+    result: undefined,
+    values: [],
+  };
 }
 
 export function Calculator() {
-  const [expression, setExpression] = useState<string>();
-  const [isClear, setIsClear] = useState<boolean>(true);
-  // const [result, setResult] = useState<string>('0');
-  // const [operator, setOperator] = useState<string | null>(null);
-
-  // function isNumericSequence(): boolean {
-  //   //
-  // }
+  const [expression, setExpression] = useState<CalculatorProps>(
+    setInitialState()
+  );
 
   function isPreviousValueAnOperator(): boolean {
-    const lastChar = expression?.[expression.length - 1];
+    if (expression.values.length === 0) {
+      return false;
+    }
 
-    return (
-      (lastChar && lastChar === Operator.Add) ||
-      lastChar === Operator.Subtract ||
-      lastChar === Operator.Multiply ||
-      lastChar === Operator.Divide
-    );
+    const lastIndex = expression.values.length - 1;
+    if (expression.values[lastIndex].isOperator) {
+      return true;
+    }
+
+    return false;
   }
 
-  function isSameOperator(operator: string): boolean {
-    const lastChar = expression?.[expression.length - 1];
+  function isSameOperatorAsPrevious(operator: string): boolean {
+    if (expression.values.length === 0) {
+      return false;
+    }
 
-    return lastChar === operator;
+    const lastIndex = expression.values.length - 1;
+    if (expression.values[lastIndex].value === operator) {
+      return true;
+    }
+
+    return false;
   }
 
-  function isSecondDecimal(value: string): boolean {
-    const lastChar = expression?.[expression.length - 1];
-    return lastChar === value;
+  function isPreviousValueNumeric(): boolean {
+    if (expression.values.length === 0) {
+      return false;
+    }
+
+    const lastIndex = expression.values.length - 1;
+    if (expression.values[lastIndex].isNumber) {
+      return true;
+    }
+
+    return false;
+  }
+
+  function isValidDecimalInput(): boolean {
+    // Need to check if the last character is a number (i.e., not already set to a float) or a decimal point.
+    if (expression.values.length === 0 || isPreviousValueNumeric()) {
+      return true;
+    }
+
+    return false;
   }
 
   function isFirstCharacter(): boolean {
-    return !expression;
-  }
-
-  function isFirstCharacterNumeric(): boolean {
-    const firstChar = expression?.[0];
-    const isNumber = !isNaN(Number(firstChar));
-
-    return isNumber;
+    return expression.values.length === 0;
   }
 
   function onButtonClick(e: React.MouseEvent<HTMLButtonElement>): void {
     const value = e.currentTarget.value;
 
     if (!isNaN(Number(value))) {
-      if (isClear) {
-        setExpression(value);
-        setIsClear(false);
+      if (expression.isDisplayClear) {
+        setExpression({
+          ...setInitialState(),
+          expressionDisplay: value,
+          isDisplayClear: false,
+          values: [
+            {
+              isFloat: false,
+              isNumber: true,
+              isOperator: false,
+              value: Number(value),
+            },
+          ],
+        });
       } else {
-        setExpression((prev) => prev + value);
+        setExpression({
+          ...expression,
+          expressionDisplay: expression.expressionDisplay + value,
+          values: [
+            ...expression.values,
+            {
+              isFloat: false,
+              isNumber: true,
+              isOperator: false,
+              value: Number(value),
+            },
+          ],
+        });
       }
     } else {
       if (isFirstCharacter()) {
         return;
       }
 
-      if (!isFirstCharacterNumeric()) {
-        return;
-      }
-
-      if (isSameOperator(value) || isPreviousValueAnOperator()) {
+      if (isSameOperatorAsPrevious(value)) {
         return;
       }
 
       switch (value) {
         case 'clear':
-          setExpression(undefined);
-          setIsClear(true);
+          setExpression(setInitialState());
           break;
         case 'backspace':
-          setExpression((prev) => {
-            if (prev?.length === 1) {
-              setIsClear(true);
-              return '0';
-            }
+          if (expression.values.length === 0) {
+            return;
+          }
 
-            return prev?.slice(0, -1);
+          if (expression.values.length === 1) {
+            setExpression({
+              ...setInitialState(),
+              isDisplayClear: false,
+            });
+
+            return;
+          }
+
+          setExpression({
+            ...expression,
+            expressionDisplay: expression.expressionDisplay.slice(0, -1),
+            values: expression.values.slice(0, -1),
           });
           break;
         case Operator.Divide:
-          setExpression((prev) => prev + Operator.Divide);
+          if (isPreviousValueAnOperator()) {
+            setExpression({
+              ...expression,
+              expressionDisplay:
+                expression.expressionDisplay.slice(0, -1) + Operator.Divide,
+              values: expression.values.slice(0, -1).concat({
+                isFloat: false,
+                isOperator: true,
+                isNumber: false,
+                value: Operator.Divide,
+              }),
+            });
+          } else {
+            setExpression({
+              ...expression,
+              expressionDisplay: expression.expressionDisplay + Operator.Divide,
+              values: [
+                ...expression.values,
+                {
+                  isFloat: false,
+                  isOperator: true,
+                  isNumber: false,
+                  value: Operator.Divide,
+                },
+              ],
+            });
+          }
           break;
         case Operator.Multiply:
-          setExpression((prev) => prev + Operator.Multiply);
+          if (isPreviousValueAnOperator()) {
+            setExpression({
+              ...expression,
+              expressionDisplay:
+                expression.expressionDisplay.slice(0, -1) + Operator.Multiply,
+              values: expression.values.slice(0, -1).concat({
+                isFloat: false,
+                isOperator: true,
+                isNumber: false,
+                value: Operator.Divide,
+              }),
+            });
+          } else {
+            setExpression({
+              ...expression,
+              expressionDisplay:
+                expression.expressionDisplay + Operator.Multiply,
+              values: [
+                ...expression.values,
+                {
+                  isFloat: false,
+                  isOperator: true,
+                  isNumber: false,
+                  value: Operator.Multiply,
+                },
+              ],
+            });
+          }
           break;
         case Operator.Subtract:
-          setExpression((prev) => prev + Operator.Subtract);
+          if (isPreviousValueAnOperator()) {
+            setExpression({
+              ...expression,
+              expressionDisplay:
+                expression.expressionDisplay.slice(0, -1) + Operator.Subtract,
+              values: expression.values.slice(0, -1).concat({
+                isFloat: false,
+                isOperator: true,
+                isNumber: false,
+                value: Operator.Divide,
+              }),
+            });
+          } else {
+            setExpression({
+              ...expression,
+              expressionDisplay:
+                expression.expressionDisplay + Operator.Subtract,
+              values: [
+                ...expression.values,
+                {
+                  isFloat: false,
+                  isOperator: true,
+                  isNumber: false,
+                  value: Operator.Subtract,
+                },
+              ],
+            });
+          }
           break;
         case Operator.Add:
-          setExpression((prev) => prev + Operator.Add);
+          if (isPreviousValueAnOperator()) {
+            setExpression({
+              ...expression,
+              expressionDisplay:
+                expression.expressionDisplay.slice(0, -1) + Operator.Add,
+              values: expression.values.slice(0, -1).concat({
+                isFloat: false,
+                isOperator: true,
+                isNumber: false,
+                value: Operator.Add,
+              }),
+            });
+          } else {
+            setExpression({
+              ...expression,
+              expressionDisplay: expression.expressionDisplay + Operator.Add,
+              values: [
+                ...expression.values,
+                {
+                  isFloat: false,
+                  isOperator: true,
+                  isNumber: false,
+                  value: Operator.Add,
+                },
+              ],
+            });
+          }
           break;
         case '.':
-          if (isSecondDecimal(value)) {
-            return;
-          } else {
-            setExpression((prev) => prev + '.');
+          if (isValidDecimalInput()) {
+            if (isFirstCharacter()) {
+              setExpression({
+                ...expression,
+                expressionDisplay: `${value}0`,
+                values: [
+                  {
+                    isFloat: true,
+                    isOperator: false,
+                    isNumber: false,
+                    value: parseFloat(`${value}0`),
+                  },
+                ],
+              });
+            } else {
+              setExpression({
+                ...expression,
+                expressionDisplay: expression.expressionDisplay + value,
+                values: [
+                  ...expression.values,
+                  {
+                    isFloat: true,
+                    isOperator: false,
+                    isNumber: false,
+                    value: value,
+                  },
+                ],
+              });
+            }
           }
           break;
         default:
-          setExpression(`${value} not supported.`);
+          console.log(`${value} not supported.`);
       }
     }
   }
@@ -136,7 +316,7 @@ export function Calculator() {
       <h1>Calculator</h1>
       <div className='screen'>
         <div className='expression'>0</div>
-        <div className='display'>{expression ?? '0'}</div>
+        <div className='display'>{expression.expressionDisplay ?? '0'}</div>
       </div>
       <div className='keys'>
         <button
