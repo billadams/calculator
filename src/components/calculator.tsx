@@ -63,22 +63,16 @@ export function Calculator() {
     return false;
   }
 
-  function isPreviousValueNumeric(): boolean {
+  function isValidDecimalInput(): boolean {
+    // Need to check if the most recent number already has a decimal point.
     if (expression.values.length === 0) {
-      return false;
-    }
-
-    const lastIndex = expression.values.length - 1;
-    if (expression.values[lastIndex].isNumber) {
       return true;
     }
 
-    return false;
-  }
-
-  function isValidDecimalInput(): boolean {
-    // Need to check if the last character is a number (i.e., not already set to a float) or a decimal point.
-    if (expression.values.length === 0 || isPreviousValueNumeric()) {
+    const lastIndex = expression.values.length - 1;
+    if (expression.values[lastIndex].isFloat) {
+      return false;
+    } else if (expression.values[lastIndex].isNumber) {
       return true;
     }
 
@@ -92,34 +86,41 @@ export function Calculator() {
   function onButtonClick(e: React.MouseEvent<HTMLButtonElement>): void {
     const value = e.currentTarget.value;
 
-    if (!isNaN(Number(value))) {
+    // If the value is a number or a decimal point.
+    if (!isNaN(Number(value)) || value === '.') {
       if (expression.isDisplayClear) {
         setExpression({
           ...setInitialState(),
-          expressionDisplay: value,
+          expressionDisplay: value === '.' ? `0.${value}` : value,
           isDisplayClear: false,
           values: [
             {
-              isFloat: false,
-              isNumber: true,
+              isFloat: value === '.',
+              isNumber: !isNaN(Number(value)),
               isOperator: false,
               value: Number(value),
             },
           ],
         });
       } else {
+        const nextValues = [...expression.values];
+        if (value === '.' && isValidDecimalInput()) {
+          nextValues[nextValues.length - 1].isFloat = true;
+        }
+
+        nextValues[nextValues.length - 1].value += value;
+        // else {rea
+        //   nextValues.push({
+        //     isFloat: false,
+        //     isNumber: true,
+        //     isOperator: false,
+        //     value: Number(value),
+        //   });
+        // }
         setExpression({
           ...expression,
           expressionDisplay: expression.expressionDisplay + value,
-          values: [
-            ...expression.values,
-            {
-              isFloat: false,
-              isNumber: true,
-              isOperator: false,
-              value: Number(value),
-            },
-          ],
+          values: nextValues,
         });
       }
     } else {
@@ -140,10 +141,15 @@ export function Calculator() {
             return;
           }
 
+          const nextValues = expression.values[expression.values.length - 1];
+          if (nextValues.value) {
+            nextValues.value = Number(nextValues.value.toString().slice(0, -1));
+          }
+
           if (expression.values.length === 1) {
             setExpression({
               ...setInitialState(),
-              isDisplayClear: false,
+              isDisplayClear: true,
             });
 
             return;
